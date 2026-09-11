@@ -46,19 +46,212 @@ class ParentDashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _purchaseDeluxe(BuildContext context, WidgetRef ref) async {
-    final success = await ref.read(iapServiceProvider).buyDeluxePass();
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '🎉 Deluxe Pass Activated! All themes unlocked + 500 Coins!',
+  void _showPrivacyPolicyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Row(
+          children: [
+            Icon(Icons.verified_user_rounded, color: Color(0xFF00897B), size: 28),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Privacy Policy & Safety',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Balloon Kingdom is committed to protecting children\'s privacy. We strictly comply with COPPA (Children\'s Online Privacy Protection Act), GDPR-K, and Google Play Families Policies.',
+                style: TextStyle(fontSize: 13, height: 1.4),
+              ),
+              SizedBox(height: 14),
+              Text(
+                '🛡️ Zero Personal Data Collection',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF004D40)),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'We do not collect names, email addresses, phone numbers, contact lists, device hardware identifiers, or location data. All game progress, high scores, coins, and educational settings remain strictly stored on your local device.',
+                style: TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+              SizedBox(height: 14),
+              Text(
+                '🧸 Child-Safe Advertising (G-Rated)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF004D40)),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Advertisements are strictly filtered for General Audiences (G-rating) with COPPA child-directed treatment enabled. Advertising ID (AD_ID) tracking is completely removed.',
+                style: TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+              SizedBox(height: 14),
+              Text(
+                '🔒 Parental Gate Protected',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF004D40)),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'All adult settings, analytics, coin upgrades, and privacy options are secured behind a parental multiplication/addition math gate to prevent unintended child access.',
+                style: TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+            ],
           ),
-          behavior: SnackBarBehavior.floating,
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00897B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: const Text('Close', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _upgradeWithCoins(BuildContext context, WidgetRef ref) async {
+    final profile = ref.read(playerProfileProvider);
+    const requiredCoins = 10000;
+
+    if (profile.coins < requiredCoins) {
+      final needed = requiredCoins - profile.coins;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Row(
+            children: [
+              Text('🪙 Not Enough Coins! 🎈'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'You have ${profile.coins} 🪙 coins.\nYou need 10,000 🪙 coins to unlock Deluxe.',
+                style: const TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Pop balloons, beat levels, and play mini-games to collect $needed more coins! 🌟',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.brown.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Keep Playing! 🎈', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Upgrade with 10,000 Coins? 👑'),
+        content: const Text(
+          'Spend 10,000 coins to unlock Balloon Kingdom Deluxe forever?\n\n'
+          '✨ All seasonal themes unlocked\n'
+          '👑 Special Crown theme equipped\n'
+          '🌟 Permanent Deluxe status',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade800,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text(
+              'Confirm Upgrade 🚀',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final success = await ref
+        .read(rewardServiceProvider)
+        .unlockDeluxeWithCoins(coinCost: requiredCoins);
+
+    if (success && context.mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('🎉 Deluxe Pass Activated! 👑'),
+          content: const Text(
+            'Congratulations! You have upgraded to Balloon Kingdom Deluxe for 10,000 coins.\n\n'
+            'All seasonal themes and Deluxe perks are permanently unlocked! ✨',
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Awesome! 🌟', style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
       );
     }
   }
+
 
   void _restorePurchases(BuildContext context, WidgetRef ref) async {
     final success = await ref.read(iapServiceProvider).restorePurchases();
@@ -145,13 +338,6 @@ class ParentDashboardScreen extends ConsumerWidget {
                       vertical: 8,
                     ),
                     children: [
-                      if (AdMobUnitIds.supported)
-                        ListTile(
-                          leading: const Icon(Icons.privacy_tip_outlined),
-                          title: const Text('Advertising privacy choices'),
-                          onTap: () =>
-                              AdMobService.instance.showPrivacyOptions(context),
-                        ),
                       // 1. Learning Progress Card
                       Container(
                         padding: const EdgeInsets.all(18),
@@ -465,11 +651,41 @@ class ParentDashboardScreen extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.amber.shade400,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        '🪙 ',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      Text(
+                                        '${profile.coins}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.amber.shade900,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             const Text(
-                              'One-time purchase: Unlocks all 10 seasonal theme packs forever, grants +500 bonus coins, and removes ad requirements.',
+                              'Upgrade with 10,000 coins: Unlocks all seasonal theme packs forever, grants special Crown theme, and permanent Deluxe status.',
                               style: TextStyle(fontSize: 13, height: 1.3),
                             ),
                             const SizedBox(height: 14),
@@ -502,59 +718,56 @@ class ParentDashboardScreen extends ConsumerWidget {
                                   ],
                                 ),
                               )
-                            else
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: () =>
-                                          _purchaseDeluxe(context, ref),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.amber.shade800,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                      ),
-                                      child: const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          'Upgrade (\$3.99) 🚀',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                            else ...[
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () =>
+                                      _upgradeWithCoins(context, ref),
+                                  icon: const Text(
+                                    '🪙',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  label: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Upgrade with 10,000 Coins 👑',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () =>
-                                          _restorePurchases(context, ref),
-                                      style: OutlinedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                      ),
-                                      child: const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text('Restore Purchases'),
-                                      ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.amber.shade800,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                      horizontal: 16,
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
+                              const SizedBox(height: 8),
+                              Center(
+                                child: TextButton(
+                                  onPressed: () =>
+                                      _restorePurchases(context, ref),
+                                  child: Text(
+                                    'Restore Previous Unlock ✨',
+                                    style: TextStyle(
+                                      color: Colors.amber.shade900,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -663,7 +876,137 @@ class ParentDashboardScreen extends ConsumerWidget {
 
                       const SizedBox(height: 16),
 
-                      // 6. Data Reset Section
+                      // 6. Family Safety & Privacy Policy Card
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.teal.shade200,
+                            width: 1.5,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.verified_user_rounded,
+                                  color: Color(0xFF00897B),
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Family Safety & Privacy',
+                                    style: AppTextStyles.headingSmall.copyWith(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF004D40),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Balloon Kingdom is certified for kids and families under Google Play & COPPA standards. We never collect personal data.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    icon: const Icon(
+                                      Icons.policy_outlined,
+                                      size: 18,
+                                      color: Color(0xFF00897B),
+                                    ),
+                                    label: const Text(
+                                      'Privacy Policy',
+                                      style: TextStyle(
+                                        color: Color(0xFF00897B),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(
+                                        color: Colors.teal.shade300,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                        horizontal: 10,
+                                      ),
+                                    ),
+                                    onPressed: () =>
+                                        _showPrivacyPolicyDialog(context),
+                                  ),
+                                ),
+                                if (AdMobUnitIds.supported) ...[
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      icon: const Icon(
+                                        Icons.privacy_tip_outlined,
+                                        size: 18,
+                                        color: Colors.blueGrey,
+                                      ),
+                                      label: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          'Ad Privacy (EEA)',
+                                          style: TextStyle(
+                                            color: Colors.blueGrey,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide(
+                                          color: Colors.blueGrey.shade200,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                          horizontal: 8,
+                                        ),
+                                      ),
+                                      onPressed: () => AdMobService.instance
+                                          .showPrivacyOptions(context),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // 7. Data Reset Section
                       Center(
                         child: TextButton.icon(
                           onPressed: () => _confirmReset(context, ref),
@@ -732,6 +1075,248 @@ class ParentDashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AdTestingCard extends ConsumerStatefulWidget {
+  const _AdTestingCard();
+
+  @override
+  ConsumerState<_AdTestingCard> createState() => _AdTestingCardState();
+}
+
+class _AdTestingCardState extends ConsumerState<_AdTestingCard> {
+  String _status = '';
+  bool _loading = false;
+
+  void _setStatus(String msg) {
+    if (mounted) setState(() => _status = msg);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final adService = ref.watch(adServiceProvider);
+    final isReady = AdMobService.instance.ready.value;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF90CAF9), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🧪', style: TextStyle(fontSize: 24)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AdMob Ads Testing Suite',
+                      style: AppTextStyles.headingSmall.copyWith(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0D47A1),
+                      ),
+                    ),
+                    Text(
+                      AdMobUnitIds.useTestAds
+                          ? '✅ Google Test Ad Units Active'
+                          : '⚠️ Live Ads Mode',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AdMobUnitIds.useTestAds
+                            ? Colors.green.shade700
+                            : Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isReady ? Colors.green.shade50 : Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isReady ? Colors.green : Colors.amber,
+                  ),
+                ),
+                child: Text(
+                  isReady ? 'Ready' : 'Initializing...',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isReady ? Colors.green.shade800 : Colors.amber.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Test all 4 Google AdMob formats instantly with official sample IDs:',
+            style: TextStyle(fontSize: 12, color: Colors.black87),
+          ),
+          const SizedBox(height: 14),
+
+          // 1. Live Banner Ad Preview
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  '📌 Banner Ad (Test Unit)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Center(child: adService.getBannerAdWidget()),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // 2. Action Buttons for Interstitial, Rewarded, and App Open
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              // Interstitial Test
+              ElevatedButton.icon(
+                icon: const Icon(Icons.fullscreen_rounded, size: 18),
+                label: const Text('Test Interstitial'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E88E5),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: _loading
+                    ? null
+                    : () async {
+                        setState(() => _loading = true);
+                        _setStatus('Loading Interstitial Ad...');
+                        final shown = await adService.showInterstitialAd(
+                          context,
+                          placement: 'next_level',
+                        );
+                        _setStatus(shown
+                            ? '✅ Interstitial Ad completed'
+                            : '❌ Interstitial unavailable');
+                        if (mounted) setState(() => _loading = false);
+                      },
+              ),
+
+              // Rewarded Video Test
+              ElevatedButton.icon(
+                icon: const Icon(Icons.videocam_rounded, size: 18),
+                label: const Text('Test Rewarded'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00C853),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: _loading
+                    ? null
+                    : () async {
+                        setState(() => _loading = true);
+                        _setStatus('Loading Rewarded Video Ad...');
+                        var rewarded = false;
+                        final shown = await adService.showRewardedVideo(
+                          context,
+                          placement: 'home_screen_gift',
+                          onReward: () {
+                            rewarded = true;
+                            ref
+                                .read(playerProfileProvider.notifier)
+                                .addRewards(coins: 25);
+                          },
+                        );
+                        _setStatus(shown
+                            ? (rewarded
+                                ? '🎉 Rewarded Ad watched & 25 coins granted!'
+                                : 'Rewarded Ad closed')
+                            : '❌ Rewarded Ad unavailable');
+                        if (mounted) setState(() => _loading = false);
+                      },
+              ),
+
+              // App Open Test
+              ElevatedButton.icon(
+                icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                label: const Text('Test App Open Ad'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C4DFF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: _loading
+                    ? null
+                    : () async {
+                        setState(() => _loading = true);
+                        _setStatus('Loading App Open Ad...');
+                        final shown =
+                            await adService.loadAndShowAppOpenAd(context);
+                        _setStatus(shown
+                            ? '✅ App Open Ad displayed'
+                            : '❌ App Open Ad unavailable');
+                        if (mounted) setState(() => _loading = false);
+                      },
+              ),
+            ],
+          ),
+
+          if (_status.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8EAF6),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                _status,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF283593),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -40,6 +40,7 @@ class _MemoryMatchGameScreenState extends ConsumerState<MemoryMatchGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startNewGame();
   }
 

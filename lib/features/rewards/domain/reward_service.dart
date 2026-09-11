@@ -378,6 +378,35 @@ class PlayerProfileNotifier extends StateNotifier<PlayerProfile> {
     SoundManager.instance.playRewardSound();
   }
 
+  Future<bool> unlockDeluxeWithCoins({int coinCost = 10000}) async {
+    if (state.coins < coinCost) return false;
+
+    const allThemes = [
+      'theme_classic',
+      'theme_rainbow',
+      'theme_halloween',
+      'theme_christmas',
+      'theme_diwali',
+      'theme_summer',
+      'theme_birthday',
+      'theme_jungle',
+      'theme_ocean',
+      'theme_space',
+      'theme_crown',
+    ];
+
+    state = state.copyWith(
+      isPremiumUnlocked: true,
+      coins: state.coins - coinCost,
+      unlockedThemes: allThemes,
+      activeTheme: 'theme_crown',
+    );
+
+    await _storageService.savePlayerProfile(state);
+    SoundManager.instance.playRewardSound();
+    return true;
+  }
+
   // Phase 8: Parental Controls & Accessibility
   Future<void> updateParentalSettings({
     int? screenTimeLimitMinutes,
@@ -466,6 +495,9 @@ class RewardService {
 
   // Phase 8 Delegations
   Future<void> unlockPremiumDeluxe() => _profileNotifier.unlockPremiumDeluxe();
+
+  Future<bool> unlockDeluxeWithCoins({int coinCost = 10000}) =>
+      _profileNotifier.unlockDeluxeWithCoins(coinCost: coinCost);
 
   Future<void> updateParentalSettings({
     int? screenTimeLimitMinutes,

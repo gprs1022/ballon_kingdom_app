@@ -45,6 +45,7 @@ class _BubblePopGameScreenState extends ConsumerState<BubblePopGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startGame();
   }
 

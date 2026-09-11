@@ -55,6 +55,7 @@ class _BalloonRushGameScreenState extends ConsumerState<BalloonRushGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startGame();
   }
 

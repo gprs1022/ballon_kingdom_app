@@ -46,6 +46,7 @@ class _FruitCatchGameScreenState extends ConsumerState<FruitCatchGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startGame();
   }
 

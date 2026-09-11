@@ -48,6 +48,7 @@ class _ColorSortGameScreenState extends ConsumerState<ColorSortGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startGame();
   }
 

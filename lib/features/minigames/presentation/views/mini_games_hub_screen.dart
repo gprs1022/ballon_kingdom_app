@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/audio/sound_manager.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/di/providers.dart';
@@ -56,6 +57,10 @@ class MiniGamesHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SoundManager.instance.startBgm();
+    });
+
     final profile = ref.watch(playerProfileProvider);
     final crossAxisCount = Responsive.crossAxisCount(
       context,

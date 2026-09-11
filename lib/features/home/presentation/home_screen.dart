@@ -28,6 +28,11 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Start ambient joyful BGM if not already playing or muted
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SoundManager.instance.startBgm();
+    });
+
     final playerProfile = ref.watch(playerProfileProvider);
     final xpInCurrentLevel = playerProfile.xp % 100;
     final activePet = playerProfile.activePet;
@@ -95,38 +100,23 @@ class HomeScreen extends ConsumerWidget {
             child: ResponsiveContainer(
               maxWidth: 580,
               alignment: Alignment.topCenter,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: IntrinsicHeight(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 8.0,
-                          ),
-                          child: Column(
-                            children: [
-                              // Top Row: Stats & Mute Toggle
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.center,
-                                child: SizedBox(
-                                  width: math.max(
-                                    380.0,
-                                    math.min(
-                                      580.0,
-                                      MediaQuery.sizeOf(context).width - 32,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Column(
+                  children: [
+                    // Top Row: Stats & Mute Toggle
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
+                      child: SizedBox(
+                        width: 480.0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                                       // Coins & Stars Pill
                                       Container(
                                         padding: const EdgeInsets.symmetric(
@@ -518,7 +508,7 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                               ),
 
-                              const Spacer(flex: 1),
+                              const SizedBox(height: 14),
 
                               // 4. Kingdom Title & Mascot Banner
                               Column(
@@ -700,7 +690,7 @@ class HomeScreen extends ConsumerWidget {
                                 ],
                               ),
 
-                              const Spacer(flex: 2),
+                              const SizedBox(height: 18),
 
                               // 5. Game Mode Buttons
                               // Play Levels -> Opens World Kingdom Map
@@ -1104,21 +1094,16 @@ class HomeScreen extends ConsumerWidget {
                                       .getBannerAdWidget(),
                                 ),
 
-                              const Spacer(flex: 1),
+                              const SizedBox(height: 16),
                             ],
                           ),
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                  ],
+                ),
+              );
+            }
 
   Widget _buildDecorativeBalloon(
     Color color,

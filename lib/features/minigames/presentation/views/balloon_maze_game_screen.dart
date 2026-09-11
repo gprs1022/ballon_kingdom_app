@@ -30,6 +30,7 @@ class _BalloonMazeGameScreenState extends ConsumerState<BalloonMazeGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startMaze();
   }
 

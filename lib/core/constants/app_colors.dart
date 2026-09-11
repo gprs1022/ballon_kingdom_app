@@ -31,12 +31,20 @@ class AppColors {
   // UI Accents
   static const Color cloudWhite = Color(0xFFFFFFFF);
   static const Color textDark = Color(0xFF263238);
+  static const Color textMedium = Color(0xFF546E7A);
   static const Color textLight = Color(0xFFECEFF1);
   static const Color cardShadow = Color(0x29000000);
   static const Color goldAccent = Color(0xFFFFC107);
   static const Color starYellow = Color(0xFFFFD700);
 
   // Soft/kid-friendly bomb puff colors (no fiery red/black violence)
-  static const Color bombBody = Color(0xFF78909C); // Soft bluish gray
+  static const Color bombBody = Color(0xFF37474F); // Dark slate/charcoal for clear hazard recognition
   static const Color bombPuff = Color(0xFFCFD8DC); // Gentle cloud puff
+  static const Color hazardWarning = Color(0xFFFF5252); // Warning red outline/aura
+  static const Color hazardGlow = Color(0xFFFFB300); // Warning amber glow
+
+  // Ad Balloon colors
+  static const Color adBalloonPurple = Color(0xFF7C4DFF); // Vibrant royal violet
+  static const Color adBalloonGold = Color(0xFFFFD700); // Shimmering gold star
 }
+

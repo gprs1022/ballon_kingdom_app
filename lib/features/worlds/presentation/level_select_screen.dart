@@ -17,6 +17,10 @@ class LevelSelectScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SoundManager.instance.startBgm();
+    });
+
     final playerProfile = ref.watch(playerProfileProvider);
     final activeWorld = world ?? WorldConfig.sunnySky();
     final crossAxisCount = Responsive.crossAxisCount(

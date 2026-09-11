@@ -24,6 +24,7 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
   bool isInUse = false;
   bool isRocketLaunching = false;
   bool isHighContrast = false;
+  bool isTargetBalloon = false;
 
   void Function(BalloonComponent balloon, Vector2 tapPosition)? onPopped;
 
@@ -55,6 +56,7 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
     required void Function(BalloonComponent, Vector2) onPopCallback,
     LearningItem? educationalItem,
     bool isHighContrastMode = false,
+    bool isTarget = false,
   }) {
     position = startPosition;
     type = balloonType;
@@ -65,6 +67,7 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
     onPopped = onPopCallback;
     learningItem = educationalItem;
     isHighContrast = isHighContrastMode;
+    isTargetBalloon = isTarget;
     wobblePhase = math.Random().nextDouble() * math.pi * 2;
     wobbleSpeed = GameConstants.wobbleFrequency + (math.Random().nextDouble() * 0.8 - 0.4);
     isPopping = false;
@@ -109,11 +112,12 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
       horizontalDrift = -horizontalDrift.abs();
     }
 
-    // Idle animation: wobble & breathing scale pulse
+    // Idle animation: wobble & breathing squash-and-stretch pulse
     wobblePhase += wobbleSpeed * dt;
     angle = math.sin(wobblePhase) * GameConstants.wobbleAmplitude;
-    final scalePulse = 1.0 + (math.cos(wobblePhase * 0.8) * 0.035);
-    scale = Vector2.all(scalePulse);
+    final scaleX = 1.0 + (math.cos(wobblePhase * 0.8) * 0.035);
+    final scaleY = 1.0 - (math.cos(wobblePhase * 0.8) * 0.035);
+    scale = Vector2(scaleX, scaleY);
 
     // If drifted far offscreen top, recycle back to pool
     if (position.y < -size.y * 1.5) {
@@ -147,6 +151,7 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
     isInUse = false;
     learningItem = null;
     isRocketLaunching = false;
+    isTargetBalloon = false;
     floatSpeedMultiplier = 1.0;
     position = Vector2(-200, -200);
   }
@@ -207,7 +212,60 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
       canvas.drawPath(knotPath, knotPaint);
     }
 
-    // 4. 3D Volumetric Balloon Body
+    // 4. Mission Target Golden Aura (if this matches active mission goal)
+    if (isTargetBalloon) {
+      final targetPulse = 0.5 + 0.5 * math.sin(wobblePhase * 3.0);
+      final targetHaloPaint = Paint()
+        ..color = AppColors.sunnyGold.withAlpha((130 + 100 * targetPulse).toInt())
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5 + 2.0 * targetPulse
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: w * 0.96 + 6 * targetPulse,
+          height: bodyHeight + 6 * targetPulse,
+        ),
+        targetHaloPaint,
+      );
+    }
+
+    // 5. Hazard Warning Pulsing Aura for Bomb Balloons (Clear "AVOID" Indicator)
+    if (type == BalloonType.bomb) {
+      final hazardPulse = 0.5 + 0.5 * math.sin(wobblePhase * 4.0);
+      final hazardAuraPaint = Paint()
+        ..color = AppColors.hazardWarning.withAlpha((140 + 90 * hazardPulse).toInt())
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5 + 1.5 * hazardPulse;
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: w * 0.94 + 5 * hazardPulse,
+          height: bodyHeight + 5 * hazardPulse,
+        ),
+        hazardAuraPaint,
+      );
+    }
+
+    // 6. Ad Balloon Stardust Violet/Golden Glow
+    if (type == BalloonType.adBalloon) {
+      final adPulse = 0.5 + 0.5 * math.sin(wobblePhase * 2.5);
+      final adGlowPaint = Paint()
+        ..color = AppColors.adBalloonGold.withAlpha((140 + 80 * adPulse).toInt())
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4.0 + 2.0 * adPulse
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6.0);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: w * 0.95 + 8 * adPulse,
+          height: bodyHeight + 8 * adPulse,
+        ),
+        adGlowPaint,
+      );
+    }
+
+    // 7. 3D Volumetric Balloon Body
     final bodyRect = Rect.fromCenter(
       center: Offset(centerX, centerY),
       width: w * 0.9,
@@ -220,7 +278,7 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
       ..style = PaintingStyle.fill;
     canvas.drawOval(bodyRect, bodyPaint);
 
-    // 5. Specular Glossy Highlight
+    // 8. Specular Glossy Highlight
     final highlightPaint = Paint()
       ..color = Colors.white.withAlpha(150)
       ..style = PaintingStyle.fill;
@@ -246,11 +304,20 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
       canvas.drawOval(bodyRect, outlinePaint);
     }
 
-    // 6. Educational Symbol / Type Badges
+    // 9. Educational Symbol / Type Badges
     if (learningItem != null) {
       _renderLearningBadge(canvas, centerX, centerY);
     } else {
       _renderSpecialTypeBadge(canvas, centerX, centerY);
+    }
+
+    // 10. Floating Header Badges for Instant Player Decision Clarity
+    if (isTargetBalloon) {
+      _drawTopBanner(canvas, centerX, centerY - bodyHeight * 0.52, '🎯 TARGET', const Color(0xFFFFD54F), Colors.black87);
+    } else if (type == BalloonType.bomb) {
+      _drawTopBanner(canvas, centerX, centerY - bodyHeight * 0.52, '⚠️ AVOID', const Color(0xFFD32F2F), Colors.white);
+    } else if (type == BalloonType.adBalloon) {
+      _drawTopBanner(canvas, centerX, centerY - bodyHeight * 0.52, '🎬 BONUS', const Color(0xFFFFD700), const Color(0xFF4A148C));
     }
   }
 
@@ -277,6 +344,18 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
         center: Alignment(-0.3, -0.35),
         radius: 0.9,
         colors: [Color(0xFFE0F7FA), Color(0xFF80DEEA), Color(0xFF00838F)],
+      );
+    } else if (type == BalloonType.bomb) {
+      return const RadialGradient(
+        center: Alignment(-0.3, -0.35),
+        radius: 0.9,
+        colors: [Color(0xFF546E7A), Color(0xFF263238), Color(0xFF102027)],
+      );
+    } else if (type == BalloonType.adBalloon) {
+      return const RadialGradient(
+        center: Alignment(-0.3, -0.35),
+        radius: 0.9,
+        colors: [Color(0xFFE040FB), Color(0xFF7C4DFF), Color(0xFF311B92)],
       );
     }
 
@@ -338,10 +417,10 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
         _drawHeart(canvas, cx, cy, iconPaint);
         break;
       case BalloonType.bomb:
-        // Soft cloud puff icon (strictly non-violent)
-        canvas.drawCircle(Offset(cx - 3, cy), 5, iconPaint);
-        canvas.drawCircle(Offset(cx + 3, cy), 5, iconPaint);
-        canvas.drawCircle(Offset(cx, cy - 3), 6, iconPaint);
+        _drawHazardIcon(canvas, cx, cy);
+        break;
+      case BalloonType.adBalloon:
+        _drawAdBalloonIcon(canvas, cx, cy);
         break;
       case BalloonType.rocket:
         _drawRocketIcon(canvas, cx, cy, iconPaint);
@@ -439,5 +518,90 @@ class BalloonComponent extends PositionComponent with TapCallbacks, HasGameRefer
         p,
       );
     }
+  }
+
+  void _drawHazardIcon(Canvas canvas, double cx, double cy) {
+    // High-contrast amber/yellow warning hazard badge with dark exclamation mark
+    final trianglePaint = Paint()
+      ..color = const Color(0xFFFFD600)
+      ..style = PaintingStyle.fill;
+    final trianglePath = Path();
+    trianglePath.moveTo(cx, cy - 8.5);
+    trianglePath.lineTo(cx + 8.5, cy + 7);
+    trianglePath.lineTo(cx - 8.5, cy + 7);
+    trianglePath.close();
+    canvas.drawPath(trianglePath, trianglePaint);
+
+    final borderPaint = Paint()
+      ..color = const Color(0xFF263238)
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke;
+    canvas.drawPath(trianglePath, borderPaint);
+
+    final markPaint = Paint()
+      ..color = const Color(0xFF263238)
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(cx, cy - 4), Offset(cx, cy + 1), markPaint);
+    canvas.drawCircle(Offset(cx, cy + 4.5), 1.2, Paint()..color = const Color(0xFF263238));
+  }
+
+  void _drawAdBalloonIcon(Canvas canvas, double cx, double cy) {
+    // Golden star and movie play arrow
+    final starPaint = Paint()..color = const Color(0xFFFFD700);
+    _drawStar(canvas, cx, cy, 10, 4.5, starPaint);
+
+    // Play triangle in royal violet
+    final playPaint = Paint()
+      ..color = const Color(0xFF4A148C)
+      ..style = PaintingStyle.fill;
+    final playPath = Path();
+    playPath.moveTo(cx - 3, cy - 5);
+    playPath.lineTo(cx + 5, cy);
+    playPath.lineTo(cx - 3, cy + 5);
+    playPath.close();
+    canvas.drawPath(playPath, playPaint);
+  }
+
+  void _drawTopBanner(Canvas canvas, double cx, double cy, String text, Color bgColor, Color textColor) {
+    final textSpan = TextSpan(
+      text: text,
+      style: GoogleFonts.fredoka(
+        fontSize: 9,
+        fontWeight: FontWeight.bold,
+        color: textColor,
+        letterSpacing: 0.5,
+      ),
+    );
+    final tp = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final pillWidth = tp.width + 12;
+    final pillHeight = tp.height + 4;
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, cy), width: pillWidth, height: pillHeight),
+      const Radius.circular(8),
+    );
+
+    // Pill shadow
+    final shadowPaint = Paint()
+      ..color = const Color(0x33000000)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+    canvas.drawRRect(rrect.shift(const Offset(0, 1.5)), shadowPaint);
+
+    // Pill background
+    final bgPaint = Paint()..color = bgColor;
+    canvas.drawRRect(rrect, bgPaint);
+
+    // Pill border
+    final borderPaint = Paint()
+      ..color = Colors.white.withAlpha(200)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(rrect, borderPaint);
+
+    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }
 }

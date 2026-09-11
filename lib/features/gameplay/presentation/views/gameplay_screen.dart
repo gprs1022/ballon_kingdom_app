@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/audio/sound_manager.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../shared/widgets/bouncy_button.dart';
@@ -15,6 +16,7 @@ import '../providers/gameplay_notifier.dart';
 import 'challenge_complete_dialog.dart';
 import 'game_hud_overlay.dart';
 import 'level_complete_dialog.dart';
+import 'wrong_balloon_dialog.dart';
 
 class GameplayScreen extends ConsumerStatefulWidget {
   final LevelConfig? levelConfig;
@@ -34,7 +36,8 @@ class GameplayScreen extends ConsumerStatefulWidget {
   ConsumerState<GameplayScreen> createState() => _GameplayScreenState();
 }
 
-class _GameplayScreenState extends ConsumerState<GameplayScreen> {
+class _GameplayScreenState extends ConsumerState<GameplayScreen>
+    with WidgetsBindingObserver {
   late BalloonKingdomGame _game;
   bool _dialogShown = false;
   LearningItem? _activeLearningPop;
@@ -42,6 +45,8 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    SoundManager.instance.startBgm();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(gameplayNotifierProvider.notifier)
@@ -73,11 +78,94 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
       onBombHitCallback: () {
         ref.read(gameplayNotifierProvider.notifier).hitBomb();
       },
+      onAvoidBalloonPoppedCallback: () {
+        ref.read(gameplayNotifierProvider.notifier).hitAvoidBalloon();
+      },
       onHeartGrantedCallback: () {
         ref.read(gameplayNotifierProvider.notifier).grantHeart();
       },
       onTimeBonusAddedCallback: (secs) {
         ref.read(gameplayNotifierProvider.notifier).addTimeBonus(secs);
+      },
+      onAdBalloonTappedCallback: () async {
+        if (!mounted) return;
+        SoundManager.instance.pauseBgm();
+        final shown = await ref.read(adServiceProvider).showRewardedVideo(
+          context,
+          placement: 'ad_balloon_screen_blast',
+          onReward: () {
+            _game.triggerScreenBlastReward();
+          },
+        );
+        SoundManager.instance.resumeBgm();
+        if (!shown && mounted) {
+          _game.resumeGame();
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    SoundManager.instance.stopBgm();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      // Device sleep mode / screen turned off / app minimized: pause gameplay & BGM
+      _game.pauseGame();
+      SoundManager.instance.pauseBgm();
+      if (mounted && !_dialogShown) {
+        _showPauseDialog();
+      }
+    }
+  }
+
+  void _onWrongBalloonPopped(GameplayState state) {
+    if (_dialogShown) return;
+    _dialogShown = true;
+    _game.pauseGame();
+    SoundManager.instance.pauseBgm();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      builder: (context) {
+        return WrongBalloonDialog(
+          score: state.score,
+          poppedCount: state.poppedCount,
+          levelIndex: widget.levelConfig?.index,
+          onRevive: () {
+            Navigator.of(context).pop();
+            _dialogShown = false;
+            ref.read(gameplayNotifierProvider.notifier).reviveFromWrongBalloon();
+            _game.reviveGame();
+            SoundManager.instance.resumeBgm();
+          },
+          onReplay: () {
+            Navigator.of(context).pop();
+            _dialogShown = false;
+            ref.read(gameplayNotifierProvider.notifier).resetSession();
+            _game.resetGame(
+              newConfig: widget.levelConfig,
+              newMission: widget.challengeMission,
+              newWorld: widget.worldConfig,
+            );
+            _game.resumeGame();
+            SoundManager.instance.resumeBgm();
+          },
+          onExit: () {
+            SoundManager.instance.stopBgm();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+        );
       },
     );
   }
@@ -86,6 +174,7 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
     if (_dialogShown) return;
     _dialogShown = true;
     _game.pauseGame();
+    SoundManager.instance.pauseBgm();
 
     final result = state.completionResult;
     if (result == null) return;
@@ -140,6 +229,7 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
     if (_dialogShown) return;
     _dialogShown = true;
     _game.pauseGame();
+    SoundManager.instance.pauseBgm();
 
     showDialog(
       context: context,
@@ -169,6 +259,7 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
 
   void _showPauseDialog() {
     _game.pauseGame();
+    SoundManager.instance.pauseBgm();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -208,6 +299,7 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
                   onTap: () {
                     Navigator.of(context).pop();
                     _game.resumeGame();
+                    SoundManager.instance.resumeBgm();
                   },
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -300,6 +392,8 @@ class _GameplayScreenState extends ConsumerState<GameplayScreen> {
     ref.listen<GameplayState>(gameplayNotifierProvider, (previous, next) {
       if (next.isLevelCompleted && !_dialogShown) {
         _onLevelCompleted(next);
+      } else if (next.isWrongBalloonGameOver && !_dialogShown) {
+        _onWrongBalloonPopped(next);
       } else if ((next.isMissionCompleted || next.isGameOver) &&
           !_dialogShown) {
         _onChallengeFinished(next);

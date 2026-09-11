@@ -23,6 +23,7 @@ class GameplayState {
   final int missionProgress;
   final bool isMissionCompleted;
   final bool isGameOver;
+  final bool isWrongBalloonGameOver;
   final MedalType medalEarned;
 
   const GameplayState({
@@ -39,6 +40,7 @@ class GameplayState {
     this.missionProgress = 0,
     this.isMissionCompleted = false,
     this.isGameOver = false,
+    this.isWrongBalloonGameOver = false,
     this.medalEarned = MedalType.none,
   });
 
@@ -69,6 +71,7 @@ class GameplayState {
     int? missionProgress,
     bool? isMissionCompleted,
     bool? isGameOver,
+    bool? isWrongBalloonGameOver,
     MedalType? medalEarned,
   }) {
     return GameplayState(
@@ -85,6 +88,8 @@ class GameplayState {
       missionProgress: missionProgress ?? this.missionProgress,
       isMissionCompleted: isMissionCompleted ?? this.isMissionCompleted,
       isGameOver: isGameOver ?? this.isGameOver,
+      isWrongBalloonGameOver:
+          isWrongBalloonGameOver ?? this.isWrongBalloonGameOver,
       medalEarned: medalEarned ?? this.medalEarned,
     );
   }
@@ -139,13 +144,42 @@ class GameplayNotifier extends StateNotifier<GameplayState> {
   }
 
   void hitBomb() {
-    if (!state.isChallengeMode || state.isGameOver || state.isMissionCompleted) return;
+    if (state.isLevelMode) {
+      hitAvoidBalloon();
+      return;
+    }
+    if (!state.isChallengeMode || state.isGameOver || state.isMissionCompleted) {
+      hitAvoidBalloon();
+      return;
+    }
     final updatedLives = state.lives - 1;
     if (updatedLives <= 0) {
-      state = state.copyWith(lives: 0, isGameOver: true);
+      state = state.copyWith(lives: 0, isGameOver: true, isWrongBalloonGameOver: true);
       _countdownTimer?.cancel();
     } else {
       state = state.copyWith(lives: updatedLives);
+    }
+  }
+
+  void hitAvoidBalloon() {
+    if (state.isGameOver || state.isMissionCompleted || state.isLevelCompleted) return;
+    _countdownTimer?.cancel();
+    state = state.copyWith(
+      isGameOver: true,
+      isWrongBalloonGameOver: true,
+      lives: 0,
+    );
+  }
+
+  void reviveFromWrongBalloon() {
+    if (!state.isGameOver) return;
+    state = state.copyWith(
+      isGameOver: false,
+      isWrongBalloonGameOver: false,
+      lives: state.isChallengeMode ? 1 : state.lives,
+    );
+    if (state.isChallengeMode && state.timeRemaining > 0) {
+      _startTimer();
     }
   }
 

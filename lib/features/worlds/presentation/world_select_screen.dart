@@ -14,6 +14,10 @@ class WorldSelectScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SoundManager.instance.startBgm();
+    });
+
     final playerProfile = ref.watch(playerProfileProvider);
     final worlds = WorldConfig.getAllWorlds();
     final isWide = Responsive.isWideScreen(context);

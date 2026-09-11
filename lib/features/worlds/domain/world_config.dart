@@ -64,7 +64,7 @@ class WorldConfig {
         worldId: 'sunny_sky',
         baseSpeed: 90.0,
         baseTarget: 15,
-        allowedTypes: [BalloonType.normal, BalloonType.golden, BalloonType.rainbow],
+        allowedTypes: [BalloonType.normal, BalloonType.golden, BalloonType.rainbow, BalloonType.bomb],
       ),
     );
   }
@@ -93,7 +93,7 @@ class WorldConfig {
         worldId: 'ocean_kingdom',
         baseSpeed: 100.0,
         baseTarget: 18,
-        allowedTypes: [BalloonType.normal, BalloonType.frozen, BalloonType.time, BalloonType.golden],
+        allowedTypes: [BalloonType.normal, BalloonType.frozen, BalloonType.time, BalloonType.golden, BalloonType.bomb],
       ),
     );
   }
@@ -177,7 +177,7 @@ class WorldConfig {
         worldId: 'candy_land',
         baseSpeed: 120.0,
         baseTarget: 24,
-        allowedTypes: [BalloonType.normal, BalloonType.rainbow, BalloonType.heart, BalloonType.magic],
+        allowedTypes: [BalloonType.normal, BalloonType.rainbow, BalloonType.heart, BalloonType.magic, BalloonType.bomb],
       ),
     );
   }

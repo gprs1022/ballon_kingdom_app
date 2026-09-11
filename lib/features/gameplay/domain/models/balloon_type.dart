@@ -12,6 +12,7 @@ enum BalloonType {
   heart,
   magic,
   bomb,
+  adBalloon,
 }
 
 class BalloonBehavior {
@@ -143,10 +144,21 @@ extension BalloonTypeExtension on BalloonType {
           coinReward: 0,
           spawnWeight: 0.02,
           speedMultiplier: 0.85,
-          effectDescription: 'Pops with a soft, gentle puff of cloud (non-violent).',
+          effectDescription: 'Hazard balloon! Avoid popping or you will lose a heart or score!',
           primaryColor: AppColors.bombBody,
-          accentColor: AppColors.bombPuff,
-          icon: Icons.cloud_rounded,
+          accentColor: AppColors.hazardWarning,
+          icon: Icons.warning_amber_rounded,
+        );
+      case BalloonType.adBalloon:
+        return const BalloonBehavior(
+          points: 15,
+          coinReward: 25,
+          spawnWeight: 0.02,
+          speedMultiplier: 0.85,
+          effectDescription: 'Bonus Balloon! Watch short video to blast all balloons and get +25 coins!',
+          primaryColor: AppColors.adBalloonPurple,
+          accentColor: AppColors.adBalloonGold,
+          icon: Icons.movie_filter_rounded,
         );
     }
   }

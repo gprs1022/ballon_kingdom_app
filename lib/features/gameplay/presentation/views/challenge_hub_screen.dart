@@ -11,6 +11,10 @@ class ChallengeHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SoundManager.instance.startBgm();
+    });
+
     final missions = ChallengeMission.getDefaultMissions();
 
     return Scaffold(

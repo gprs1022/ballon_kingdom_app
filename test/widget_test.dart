@@ -163,8 +163,8 @@ void main() {
   });
 
   group('BalloonType & WorldConfig Tests', () {
-    test('All 10 balloon types have defined behaviors', () {
-      expect(BalloonType.values.length, 10);
+    test('All 11 balloon types have defined behaviors', () {
+      expect(BalloonType.values.length, 11);
       for (final type in BalloonType.values) {
         expect(type.behavior.spawnWeight, greaterThan(0));
       }
@@ -627,6 +627,32 @@ void main() {
         final restoreSuccess = await iapService.restorePurchases();
         expect(restoreSuccess, isTrue);
         expect(profileNotifier.state.isPremiumUnlocked, isTrue);
+      },
+    );
+
+    test(
+      'RewardService.unlockDeluxeWithCoins requires 10000 coins and unlocks deluxe',
+      () async {
+        final fakeStorage = FakeStorageService();
+        final profileNotifier = PlayerProfileNotifier(fakeStorage);
+        final rewardService = RewardService(profileNotifier);
+
+        // Initially 0 coins, unlock should fail
+        expect(profileNotifier.state.coins, 0);
+        final failUnlock = await rewardService.unlockDeluxeWithCoins(coinCost: 10000);
+        expect(failUnlock, isFalse);
+        expect(profileNotifier.state.isPremiumUnlocked, isFalse);
+
+        // Grant 12,000 coins
+        await profileNotifier.addRewards(coins: 12000);
+        expect(profileNotifier.state.coins, 12000);
+
+        // Now unlock with 10,000 coins
+        final success = await rewardService.unlockDeluxeWithCoins(coinCost: 10000);
+        expect(success, isTrue);
+        expect(profileNotifier.state.isPremiumUnlocked, isTrue);
+        expect(profileNotifier.state.coins, 2000); // 12000 - 10000
+        expect(profileNotifier.state.unlockedThemes, contains('theme_crown'));
       },
     );
 

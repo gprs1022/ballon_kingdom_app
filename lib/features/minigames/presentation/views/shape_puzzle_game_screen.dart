@@ -36,6 +36,7 @@ class _ShapePuzzleGameScreenState extends ConsumerState<ShapePuzzleGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _initPuzzle();
   }
 

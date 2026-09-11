@@ -49,6 +49,7 @@ class _AnimalMatchGameScreenState extends ConsumerState<AnimalMatchGameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundManager.instance.startBgm();
     _startRound();
   }
 
