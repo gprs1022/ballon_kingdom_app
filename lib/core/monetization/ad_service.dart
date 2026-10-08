@@ -29,41 +29,68 @@ abstract class AdService {
 /// Live units require an explicit release build opt-in. Defaults always use
 /// Google's sample inventory, including release builds used for testing.
 class AdMobUnitIds {
+  // Use test ads in debug mode, unless ADMOB_USE_LIVE_ADS is enabled.
+  // In release builds, use real/live ads by default unless ADMOB_FORCE_TEST_ADS is set.
   static const useTestAds =
-      !kReleaseMode || !bool.fromEnvironment('ADMOB_USE_LIVE_ADS');
+      (!kReleaseMode && !bool.fromEnvironment('ADMOB_USE_LIVE_ADS')) ||
+      bool.fromEnvironment('ADMOB_FORCE_TEST_ADS');
+
   static bool get supported =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS);
   static bool get _ios => defaultTargetPlatform == TargetPlatform.iOS;
+
+  // Real AdMob Ad Unit IDs for Balloon Kingdom (Android)
+  static const defaultAndroidBannerId =
+      'ca-app-pub-9888777523011398/1661628036';
+  static const defaultAndroidInterstitialId =
+      'ca-app-pub-9888777523011398/1598048855';
+  static const defaultAndroidRewardedId =
+      'ca-app-pub-9888777523011398/3218603933';
+  static const defaultAndroidAppOpenId =
+      'ca-app-pub-9888777523011398/6989976334';
+
   static String get bannerAdUnitId => useTestAds
       ? (_ios
             ? 'ca-app-pub-3940256099942544/2934735716'
             : 'ca-app-pub-3940256099942544/6300978111')
       : (_ios
             ? const String.fromEnvironment('ADMOB_IOS_BANNER_ID')
-            : const String.fromEnvironment('ADMOB_ANDROID_BANNER_ID'));
+            : const String.fromEnvironment(
+                'ADMOB_ANDROID_BANNER_ID',
+                defaultValue: defaultAndroidBannerId,
+              ));
   static String get interstitialAdUnitId => useTestAds
       ? (_ios
             ? 'ca-app-pub-3940256099942544/4411468910'
             : 'ca-app-pub-3940256099942544/1033173712')
       : (_ios
             ? const String.fromEnvironment('ADMOB_IOS_INTERSTITIAL_ID')
-            : const String.fromEnvironment('ADMOB_ANDROID_INTERSTITIAL_ID'));
+            : const String.fromEnvironment(
+                'ADMOB_ANDROID_INTERSTITIAL_ID',
+                defaultValue: defaultAndroidInterstitialId,
+              ));
   static String get rewardedAdUnitId => useTestAds
       ? (_ios
             ? 'ca-app-pub-3940256099942544/1712485313'
             : 'ca-app-pub-3940256099942544/5224354917')
       : (_ios
             ? const String.fromEnvironment('ADMOB_IOS_REWARDED_ID')
-            : const String.fromEnvironment('ADMOB_ANDROID_REWARDED_ID'));
+            : const String.fromEnvironment(
+                'ADMOB_ANDROID_REWARDED_ID',
+                defaultValue: defaultAndroidRewardedId,
+              ));
   static String get appOpenAdUnitId => useTestAds
       ? (_ios
             ? 'ca-app-pub-3940256099942544/5575463023'
             : 'ca-app-pub-3940256099942544/9257395921')
       : (_ios
             ? const String.fromEnvironment('ADMOB_IOS_APP_OPEN_ID')
-            : const String.fromEnvironment('ADMOB_ANDROID_APP_OPEN_ID'));
+            : const String.fromEnvironment(
+                'ADMOB_ANDROID_APP_OPEN_ID',
+                defaultValue: defaultAndroidAppOpenId,
+              ));
 
   static bool get isAppOpenConfigured =>
       RegExp(r'^ca-app-pub-\d{16}/\d{10}$').hasMatch(appOpenAdUnitId) &&

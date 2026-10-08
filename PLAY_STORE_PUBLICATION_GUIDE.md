@@ -82,18 +82,16 @@ When filling out **App Content** in the Google Play Console:
 Currently, the app safely runs in **Test Ads Mode** to prevent accidental policy violations or invalid traffic strikes during development.
 
 When you are ready to show your own live ads:
-1. Obtain your **AdMob App ID** and **Ad Unit IDs** from [Google AdMob Console](https://admob.google.com).
-2. Build with your production AdMob environment variables or properties:
-```powershell
-flutter build appbundle --release `
-  --dart-define=ADMOB_USE_LIVE_ADS=true `
-  --dart-define=ADMOB_ANDROID_BANNER_ID="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY" `
-  --dart-define=ADMOB_ANDROID_INTERSTITIAL_ID="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY" `
-  --dart-define=ADMOB_ANDROID_REWARDED_ID="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY" `
-  --dart-define=ADMOB_ANDROID_APP_OPEN_ID="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY"
-```
-3. Update `android/app/build.gradle.kts` `adMobAppId` default or pass via Gradle:
-`-Pflutter.adMobAppId="ca-app-pub-XXXXXXXXXXXXXXXX~ZZZZZZZZZZ"`
+1. Production **Ad Unit IDs** have been configured in [`lib/core/monetization/ad_service.dart`](file:///d:/ballon_kingdom_app/lib/core/monetization/ad_service.dart):
+   - **App Open**: `ca-app-pub-9888777523011398/6989976334` (`app_opening_banner`)
+   - **Banner**: `ca-app-pub-9888777523011398/1661628036` (`Bottom_Banner`)
+   - **Interstitial**: `ca-app-pub-9888777523011398/1598048855` (`Game_Over_Interstitial`)
+   - **Rewarded**: `ca-app-pub-9888777523011398/3218603933` (`reward_banner`)
+2. Release builds now automatically use these live Ad Unit IDs!
+3. Add your **AdMob App ID** (`ca-app-pub-9888777523011398~XXXXXXXXXX`) to `android/gradle.properties`:
+   ```properties
+   ADMOB_APP_ID=ca-app-pub-9888777523011398~XXXXXXXXXX
+   ```
 
 ---
 
